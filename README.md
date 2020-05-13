@@ -26,7 +26,7 @@ following updates:
 * StatefulSet versions apps/v1beta1 and apps/v1beta2 are deprecated
   * use apps/v1, available since Kubernetes 1.9
   
-Those are all I've found so far that are part of the deprecated list, 
+Those are all I've found so far that are part of the deprecated list.
 `checkapi.sh` can be used to check. Here is the full list: 
    * DaemonSet versions extensions/v1beta and apps/v1beta2 are deprecated
       * use apps/v1, available since Kubernetes 1.9
@@ -51,5 +51,5 @@ yq: https://mikefarah.gitbook.io/yq/
 
 #### instructions
 1. download, put somewhere useful
-2. run `apiupdate.sh` from the top level directory of the files to 
-be updated
+2. run `apiupdate.sh` from the top level directory of the set of deployment 
+files to be updated
