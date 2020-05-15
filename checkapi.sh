@@ -25,9 +25,38 @@ for f in $(find . | grep "\.yaml$") ; do
 
   	d=0;
   	while [ $d -lt $apis ] ; do
-		echo -e $f $(yq read -d"$d" $f 'metadata.name') \
-		'\t' $(yq read -d"$d" $f 'kind')  \
+  		kind=$(yq read -d"$d" $f 'kind')
+		echo -e $f \
+		'\t' $(yq read -d"$d" $f 'metadata.name') \
+		'\t' $kind  \
 		'\t' $(yq read -d"$d" $f 'apiVersion')
+
+		# check for other things that will change
+		case $kind in
+			"DaemonSet")
+				if [ $(yq read -d"$d" $f 'spec.templateGeneration') ] ; then
+					echo "    found spec.templateGeneration"
+				fi
+				if [ -z "$(yq read -d"$d" $f 'spec.selector')" ] ; then
+					echo "    NOT found spec.selector"
+					echo "    spec.template.metadata.labels: " $(yq read -d"$d" $f 'spec.template.metadata.labels')
+				fi
+			;;
+			"Deployment")
+				if [ $(yq read -d"$d" $f 'spec.rollbackTo') ] ; then
+					echo "    found spec.rollbackTo"
+				fi
+				if [ -z "$(yq read -d"$d" $f 'spec.selector')" ] ; then
+					echo "    NOT found spec.selector"
+					echo "    spec.template.metadata.labels: " $(yq read -d"$d" $f 'spec.template.metadata.labels')
+				fi
+			;;
+			"StatefulSet" | "ReplicaSet")
+				if [ -z "$(yq read -d"$d" $f 'spec.selector')" ] ; then
+					echo "    NOT found spec.selector"
+					echo "    spec.template.metadata.labels: " $(yq read -d"$d" $f 'spec.template.metadata.labels')
+				fi
+		esac
 		((d++))
 	done
 done

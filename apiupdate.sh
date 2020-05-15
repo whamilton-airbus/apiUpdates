@@ -18,33 +18,47 @@ for f in $(find . | grep "\.yaml") ; do
 
   	d=0;
   	while [ $d -lt $apis ] ; do
+  		echo "Checking " $f
 
-  		if [ $(yq read -d"$d" $f 'kind') = "Deployment" ] ; then
+  		name=$(yq read -d"$d" $f 'metadata.name')
+  		kind=$(yq read -d"$d" $f 'kind')
+
+  		if [ $kind = "Deployment" ] ; then
   			oldv=$(yq read -d"$d" $f 'apiVersion')
-  			echo "Found" $(yq read -d"$d" $f 'metadata.name') $(yq read -d"$d" $f 'kind') $oldv
+  			echo "    Found" $f $name $kind $oldv
+
     		if [ $oldv = "extensions/v1beta1" ] || [ $oldv  = "apps/v1beta1" ]  || [ $oldv  = "apps/v1beta2" ] ; then
+
+    			# update the apiVersion
    				yq write -i -d"$d" $f 'apiVersion' apps/v1
-  				newv=$(yq read -d"$d" $f 'apiVersion')
-  				if [ $oldv = $newv ] ; then
-	   				echo "FAILED $f " $(yq read -d"$d" $f 'metadata.name') $(yq read -d"$d" $f 'kind') $(yq read -d"$d" $f 'apiVersion')
-	   			else
-   					echo "Updated $f " $(yq read -d"$d" $f 'metadata.name') $(yq read -d"$d" $f 'kind') $(yq read -d"$d" $f 'apiVersion')
-				fi
+
+    			# add required spec.selector (to match spec.template.metadata.labels)
+    			type=$(yq read -d"$d" $f 'spec.template.metadata.labels' | awk -F: '{ print $1 }')
+    			name=$(yq read -d"$d" $f 'spec.template.metadata.labels' | awk '{ print $2 }')
+    			yq write -i -d"$d" $f spec.selector.matchLabels.$type $name
+
+    			# check for rollbackTo (to be removed) - none found so far
+
+   				echo "    Updated $f " $name $kind $(yq read -d"$d" $f 'apiVersion')
     		fi
 
-		elif [ $(yq read -d"$d" $f 'kind') = "StatefulSet" ] ; then
+		elif [ $kind = "StatefulSet" ] ; then
   			oldv=$(yq read -d"$d" $f 'apiVersion')
-  			echo "Found" $(yq read -d"$d" $f 'metadata.name') $(yq read -d"$d" $f 'kind') $oldv
+  			echo "    Found" $name $kind $oldv
     		if [ $oldv  = "apps/v1beta1" ]  || [ $oldv  = "apps/v1beta2" ] ; then
+
+    			# update the apiVersion
    				yq write -i -d"$d" $f 'apiVersion' apps/v1
-  				newv=$(yq read -d"$d" $f 'apiVersion')
-  				if [ $oldv = $newv ] ; then
-	   				echo "FAILED $f " $(yq read -d"$d" $f 'metadata.name') $(yq read -d"$d" $f 'kind') $(yq read -d"$d" $f 'apiVersion')
-	   			else
-   					echo "Updated $f " $(yq read -d"$d" $f 'metadata.name') $(yq read -d"$d" $f 'kind') $(yq read -d"$d" $f 'apiVersion')
-   				fi
+
+    			# add required spec.selector (to match spec.template.metadata.labels)
+    			type=$(yq read -d"$d" $f 'spec.template.metadata.labels' | awk -F: '{ print $1 }')
+    			name=$(yq read -d"$d" $f 'spec.template.metadata.labels' | awk '{ print $2 }')
+    			yq write -i -d"$d" $f spec.selector.matchLabels.$type $name
+
+   				echo "    Updated $f " $name $kind $(yq read -d"$d" $f 'apiVersion')
    			fi
 		fi
 		((d++)) #while
 	done #while
 done #for
+
