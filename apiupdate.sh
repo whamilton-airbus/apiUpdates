@@ -55,6 +55,13 @@ for f in $(find . | grep "\.yaml") ; do
     			name=$(yq read -d"$d" $f 'spec.template.metadata.labels' | awk '{ print $2 }')
     			yq write -i -d"$d" $f spec.selector.matchLabels.$type $name
 
+				# update the update strategy
+				updatestrategy=$(yq read -d"$d" $f "spec.strategy.type")
+				if [ $updatestrategy ] ; then
+					yq delete -i -d"$d" $f 'spec.strategy'
+					yq write -i -d"$d" $f 'spec.updateStrategy.type' $updatestrategy
+				fi
+
    				echo "    Updated $f " $name $kind $(yq read -d"$d" $f 'apiVersion')
    			fi
 		fi
