@@ -20,7 +20,7 @@ for f in $(find . | grep "\.yaml$") ; do
 	# won't automate. these files probably need to be handled manually
 	chk=$(grep kind $f | wc -l)
 	if [ $apis -ne $chk ] ; then
-		echo "ERROR something fishy with " $f
+		echo "ERROR something odd with " $f
 	fi
 
   	d=0;
